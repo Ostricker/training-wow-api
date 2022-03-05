@@ -1,7 +1,10 @@
 package cz.ostricker.training.wowApi.cmdline;
 
+import cz.ostricker.training.wowApi.cmdline.API.BlizzardAPI;
+import cz.ostricker.training.wowApi.cmdline.API.Namespace;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -47,7 +50,7 @@ public class CmdLine
       String lineStart = ">";
 
       // Parse aktuálního příkazu -- Zde se čeká většinu času na příkaz
-      currentCommand = CmdCommands.parseCommand(textIO.newStringInputReader().read(lineStart));
+      currentCommand = CmdCommands.parseCommand(textIO.newStringInputReader().withDefaultValue("creature").read(lineStart));
 
       // Pokud je currentCommand null
       if (currentCommand == null)
@@ -59,8 +62,8 @@ public class CmdLine
         // Jinak spouštím switch podle aktuálního příkazu
         switch (currentCommand)
         {
-          case BLIZ:
-            callBlizzardAPI();
+          case CREATURE:
+            zpracujCREATURE();
             break;
           case QUIT:
             break;
@@ -113,27 +116,38 @@ public class CmdLine
   /**
    * Volání blizzard API
    */
-  private void callBlizzardAPI()
+  private void zpracujCREATURE()
   {
-    final String namespace = "static-eu";
-    final String locale = "en_US";
-    final String baseURL = "https://eu.api.blizzard.com";
-    final String[] testPaths = {"/data/wow/creature/30"};
+    // Získání názvu příšery
+    String nazevPrisery = textIO.newStringInputReader().withDefaultValue("dragon").read("Název příšery>");
+
+    // Vytvoření URL
+    String baseURL = BlizzardAPI.BASE_URL;
+    String path = "/data/wow/search/creature";
+    String extra = "&name.en_GB=" + nazevPrisery + "&orderby=id&_page=1";
+
+    // Zavolání URL
+    String result = BlizzardAPI.GET(baseURL + path, Namespace.STATIC_EU, extra);
+    if (result == null)
+    {
+      textIO.getTextTerminal().print("Příšera nebyla nalezena!\n");
+      return;
+    }
 
     try
     {
+      textIO.getTextTerminal().print("Příšera nalezena - zpracování\n");
+      // Zpracování objektu
+      JSONObject object = new JSONObject(result);
 
-      for (final String path : testPaths)
-      {
-        final String uri = baseURL + path;
-        final String result = BlizzardAPI.get(uri, namespace, locale);
-        final JSONObject object = new JSONObject(result);
-        textIO.getTextTerminal().print(uri + " ===> " + object.toString(2));
-      }
+      // 1) Z JSON objektu získej jména všech příšer v en_GB lokalizaci
+      // 2) tyto jména vypiš do aplikace
+
+      System.out.println(baseURL + path + " ===> " + object.toString(2));
     }
-    catch (Exception e)
+    catch (JSONException ex)
     {
-      e.printStackTrace();
+      ex.printStackTrace();
     }
   }
 }
