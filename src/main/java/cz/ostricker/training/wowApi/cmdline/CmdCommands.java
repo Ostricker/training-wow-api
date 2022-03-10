@@ -2,7 +2,7 @@ package cz.ostricker.training.wowApi.cmdline;
 
 public enum CmdCommands
 {
-  CREATURE("CREATURE", "creature", "Získání informací o příšeře"),
+  SEARCH_CREATURE("SEARCH_CREATURE", "seacr", "Získání informací o vybrané příšeře"),
   CLEAR("CLEAR", "clear", "\tVyčistí terminál"),
   HELP("HELP", "help", "\tVypíše help název všech příkazů"),
   QUIT("QUIT", "quit", "\tUkončí program");

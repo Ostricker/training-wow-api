@@ -64,8 +64,8 @@ public class CmdLine
         // Jinak spouštím switch podle aktuálního příkazu
         switch (currentCommand)
         {
-          case CREATURE:
-            zpracujCREATURE();
+          case SEARCH_CREATURE:
+            zpracujSEARCH_CREATURE();
             break;
           case QUIT:
             break;
@@ -118,7 +118,7 @@ public class CmdLine
   /**
    * Volání blizzard API
    */
-  private void zpracujCREATURE()
+  private void zpracujSEARCH_CREATURE()
   {
     // Získání názvu příšery
     String nazevPrisery = textIO.newStringInputReader().withDefaultValue("dragon").read("Název příšery>");
@@ -139,19 +139,24 @@ public class CmdLine
     try
     {
       textIO.getTextTerminal().print("Příšera nalezena - zpracování\n");
+
       // Zpracování objekt
       JSONObject object = new JSONObject(result);
+
       // Získání objektu Results
       JSONArray listResults = object.getJSONArray("results");
+
       // Vytvoření prázdného listu příšer
       ArrayList<PriseraZaznam> listPriser = new ArrayList<>();
+
       // For loop objektem "results" (JSONArray)
-      for(int i = 1; i< listResults.length(); i++)
+      for (int i = 1; i < listResults.length(); i++)
       {
         // Získání aktálního objektu z listu
         JSONObject prisera = listResults.getJSONObject(i);
         // Získání objektu data
-        JSONObject data =  prisera.getJSONObject("data");
+        JSONObject data = prisera.getJSONObject("data");
+
         // Vytvoření našeho nového objektu PriseraZaznam
         PriseraZaznam zaznam = new PriseraZaznam();
         // Získání objektu name
@@ -173,19 +178,14 @@ public class CmdLine
         // Zapsání získaných dat z JSONObjektů do instance listPriser
         listPriser.add(zaznam);
       }
-        // Cyklus ve kterem vypiseme ziskane informace z JSOBObjektů za kazdou priseru v listPriser
-      for (PriseraZaznam prisera : listPriser) {
 
-        textIO.getTextTerminal().print("Jmeno: " + prisera.getName() + ", typ: " + prisera.getTypeName()
-                + ", jeTameable:" + prisera.isTameable() + ", idPrisery: " + prisera.getId() + "\n");
-
-
+      // Cyklus ve kterem vypiseme ziskane informace z JSOBObjektů za kazdou priseru v listPriser
+      for (PriseraZaznam prisera : listPriser)
+      {
+        textIO.getTextTerminal().print(
+          "Jmeno: " + prisera.getName() + ", typ: " + prisera.getTypeName() + ", jeTameable:" + prisera.isTameable() + ", idPrisery: "
+          + prisera.getId() + "\n");
       }
-
-//
-
-
-     // System.out.println(baseURL + path + " ===> " + object.toString(2));
     }
     catch (JSONException ex)
     {
