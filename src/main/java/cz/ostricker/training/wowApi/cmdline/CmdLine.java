@@ -124,10 +124,10 @@ public class CmdLine
     // Vytvoření URL
     String baseURL = BlizzardAPI.BASE_URL;
     String path = "/data/wow/search/creature";
-    String extra = "&name.en_GB=" + nazevPrisery + "&orderby=id&_page=1";
+    String suffix = "&name.en_GB=" + nazevPrisery + "&orderby=id&_page=1";
 
     // Zavolání URL
-    String result = BlizzardAPI.GET(baseURL + path, Namespace.STATIC_EU, extra);
+    String result = BlizzardAPI.GET(baseURL + path, suffix, Namespace.STATIC_EU);
     if (result == null)
     {
       textIO.getTextTerminal().print("Příšera nebyla nalezena!\n");

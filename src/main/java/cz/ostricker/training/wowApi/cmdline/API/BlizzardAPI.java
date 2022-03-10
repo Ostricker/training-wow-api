@@ -37,7 +37,7 @@ public class BlizzardAPI
 
   // Base url pro BlizzardAPI
   public static final String BASE_URL = "https://eu.api.blizzard.com";
-  public static final String LOCALE = "en_GB";
+  public static final String en_GB = "en_GB";
 
   // Statická proměnná TOKENU -> pokud existuje, tak nemusím vytvářet další - informace k tokenu
   private static JSONObject TOKEN = null;
@@ -106,7 +106,7 @@ public class BlizzardAPI
    * @return
    * @throws IOException
    */
-  public JSONObject getToken() throws IOException
+  private JSONObject getToken() throws IOException
   {
     // Pokud už expiroval nebo nemám, tak vytvářím nový
     if (TOKEN == null || TOKEN_EXPIRE_TIME > System.currentTimeMillis())
@@ -118,14 +118,56 @@ public class BlizzardAPI
   }
 
   /**
+   * Metoda GET, která nezpracovává locale -> zavolá se předaný string tak jak je
+   * @param sURL
+   * @param namespace
+   * @return
+   */
+  public static String GET_RAW(String sURL, Namespace namespace)
+  {
+    try
+    {
+      return getInstance().requestGET(sURL, namespace);
+    }
+    catch (IOException ex)
+    {
+      ex.printStackTrace();
+      return null;
+    }
+  }
+
+  public static String GET(String sURL, Namespace namespace)
+  {
+    return BlizzardAPI.GET(sURL, null, namespace);
+  }
+
+  /**
+   * Vrací jedinou instanci třídy XML_TPlanVecnaSkupina
+   * @return
+   */
+  public static String GET(String sURL, String suffix, Namespace namespace)
+  {
+    try
+    {
+      // Zpracování URL
+      String kompletniURL = sURL + "?locale=" + en_GB + (suffix != null ? suffix : "");
+      return getInstance().requestGET(kompletniURL, namespace);
+    }
+    catch (IOException ex)
+    {
+      ex.printStackTrace();
+      return null;
+    }
+  }
+
+  /**
    * Get požadavek
    * @param sURL
    * @param namespace
-   * @param locale
    * @return
    * @throws IOException
    */
-  public String requestGET(String sURL, Namespace namespace, String locale, String extra) throws IOException
+  private String requestGET(String sURL, Namespace namespace) throws IOException
   {
     // Získání tokenu pro
     JSONObject token = getToken();
@@ -135,21 +177,14 @@ public class BlizzardAPI
       return null;
     }
 
-    // String builder pro sestavení požadavku
-    final StringBuilder builder = new StringBuilder();
-    builder.append(sURL);
-//    builder.append("namespace=").append(namespace);
-    builder.append("?locale=").append(locale);
-    if (extra != null) builder.append(extra);
-    builder.append("&access_token=").append(token.getString("access_token"));
-
     // Vypsání sestaveného požadavku
-    System.out.println("Sestavený URL: " + builder);
+    System.out.println("BlizzardAPI.requestGET URL: " + sURL);
 
     // Vytvoření připojení
-    final URL url = new URL(builder.toString());
+    final URL url = new URL(sURL);
     final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setRequestProperty("Battlenet-Namespace", namespace.getText());
+    connection.setRequestProperty("Authorization", "Bearer " + token.getString("access_token"));
 
     // Připojení a získání response code - Pokud kod není OK, tak zkusím načíst co mám
     int responseCode = connection.getResponseCode();
@@ -161,33 +196,6 @@ public class BlizzardAPI
     
     // Vrácení odpovědi
     return IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
-  }
-
-  public static String GET(String sURL, Namespace namespace)
-  {
-    return GET(sURL, namespace, null);
-  }
-
-  public static String GET(String sURL, Namespace namespace, String extra)
-  {
-    return GET(sURL, namespace, LOCALE, extra);
-  }
-
-  /**
-   * Vrací jedinou instanci třídy XML_TPlanVecnaSkupina
-   * @return
-   */
-  public static String GET(String sURL, Namespace namespace, String locale, String extra)
-  {
-    try
-    {
-      return getInstance().requestGET(sURL, namespace, locale, extra);
-    }
-    catch (IOException ex)
-    {
-      ex.printStackTrace();
-      return null;
-    }
   }
 
   /**
@@ -205,7 +213,7 @@ public class BlizzardAPI
       for (final String path : testPaths)
       {
         final String uri = baseURL + path;
-        final String result = BlizzardAPI.GET(uri, Namespace.STATIC_EU, locale);
+        final String result = BlizzardAPI.GET(uri, Namespace.STATIC_EU);
         final JSONObject object = new JSONObject(result);
         System.out.println(uri + " ===> " + object.toString(2));
       }
