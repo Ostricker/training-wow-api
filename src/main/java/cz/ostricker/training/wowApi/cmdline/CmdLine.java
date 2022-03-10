@@ -4,10 +4,12 @@ import cz.ostricker.training.wowApi.cmdline.API.BlizzardAPI;
 import cz.ostricker.training.wowApi.cmdline.API.Namespace;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class CmdLine
 {
@@ -137,13 +139,53 @@ public class CmdLine
     try
     {
       textIO.getTextTerminal().print("Příšera nalezena - zpracování\n");
-      // Zpracování objektu
+      // Zpracování objekt
       JSONObject object = new JSONObject(result);
+      // Získání objektu Results
+      JSONArray listResults = object.getJSONArray("results");
+      // Vytvoření prázdného listu příšer
+      ArrayList<PriseraZaznam> listPriser = new ArrayList<>();
+      // For loop objektem "results" (JSONArray)
+      for(int i = 1; i< listResults.length(); i++)
+      {
+        // Získání aktálního objektu z listu
+        JSONObject prisera = listResults.getJSONObject(i);
+        // Získání objektu data
+        JSONObject data =  prisera.getJSONObject("data");
+        // Vytvoření našeho nového objektu PriseraZaznam
+        PriseraZaznam zaznam = new PriseraZaznam();
+        // Získání objektu name
+        JSONObject name = data.getJSONObject("name");
+        // Získání název z JSONObject name podle klíče engb a vkládáme do setName (set metoda pro promenou ve tride PriseraZaznam)
+        zaznam.setName(name.getString("en_GB"));
+        // Získání is_tameable z JSONObject data podle klíče is_tameable a vkládáme do setTameable (set metoda pro promenou ve tride PriseraZaznam)
+        zaznam.setTameable(data.getBoolean("is_tameable"));
+        // Získání Id z JSONObject data podle klíče id a vkládáme do setTameable (set metoda pro promenou ve tride PriseraZaznam)
+        zaznam.setId(data.getInt("id"));
+        // Získání objektu type
+        JSONObject type = data.getJSONObject("type");
+        // Získání obektu typename
+        JSONObject typename = type.getJSONObject("name");
+        // Získání Typename z JSONObject typeNme podle klíče EN_GB a vkládáme do setTypename (set metoda pro promenou ve tride PriseraZaznam)
+        zaznam.setTypeName(typename.getString("en_GB"));
+        // Získání TypeID z JSONObject type podle klíče id a vkládáme do setTypeID (set metoda pro promenou ve tride PriseraZaznam)
+        zaznam.setTypeID(type.getInt("id"));
+        // Zapsání získaných dat z JSONObjektů do instance listPriser
+        listPriser.add(zaznam);
+      }
+        // Cyklus ve kterem vypiseme ziskane informace z JSOBObjektů za kazdou priseru v listPriser
+      for (PriseraZaznam prisera : listPriser) {
 
-      // 1) Z JSON objektu získej jména všech příšer v en_GB lokalizaci
-      // 2) tyto jména vypiš do aplikace
+        textIO.getTextTerminal().print("Jmeno: " + prisera.getName() + ", typ: " + prisera.getTypeName()
+                + ", jeTameable:" + prisera.isTameable() + ", idPrisery: " + prisera.getId() + "\n");
 
-      System.out.println(baseURL + path + " ===> " + object.toString(2));
+
+      }
+
+//
+
+
+     // System.out.println(baseURL + path + " ===> " + object.toString(2));
     }
     catch (JSONException ex)
     {
