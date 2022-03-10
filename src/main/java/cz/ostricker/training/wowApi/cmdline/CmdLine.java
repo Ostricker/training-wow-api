@@ -67,6 +67,9 @@ public class CmdLine
           case SEARCH_CREATURE:
             zpracujSEARCH_CREATURE();
             break;
+          case INFO_CREATURE:
+            zpracujINFO_CREATURE();
+            break;
           case QUIT:
             break;
           case HELP:
@@ -191,5 +194,24 @@ public class CmdLine
     {
       ex.printStackTrace();
     }
+  }
+
+  /**
+   * Volání blizzard API
+   */
+  private void zpracujINFO_CREATURE()
+  {
+    // Získání názvu příšery
+    String nazevPrisery = textIO.newStringInputReader().read("ID příšery>");
+    if (nazevPrisery == null || nazevPrisery.equals(""))
+    {
+      textIO.getTextTerminal().print("Je potřeba zadat validní ID příšery!\n");
+      return;
+    }
+
+    // 1) Vytvoř validní URL pro Creature API
+    // 2) Zavolej Blizzard API a získej result
+    // 3) result převeď do JSONObjekt
+    // 4) Vypiš informace o příšěře do terminálu
   }
 }
