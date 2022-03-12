@@ -1,15 +1,11 @@
 package cz.ostricker.training.wowApi.cmdline;
 
-import cz.ostricker.training.wowApi.cmdline.API.BlizzardAPI;
-import cz.ostricker.training.wowApi.cmdline.API.Namespace;
+import cz.ostricker.training.wowApi.PriseraZaznam;
+import cz.ostricker.training.wowApi.WoWAPI;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.awt.*;
-import java.util.ArrayList;
 
 public class CmdLine
 {
@@ -18,6 +14,7 @@ public class CmdLine
 
   private final TextIO textIO;
   private CmdCommands currentCommand;
+  private final WoWAPI wowAPI;
 
   /**
    * Konstruktor CmdLine
@@ -29,6 +26,8 @@ public class CmdLine
 
     // Iniciální nastavení terminálu
     setupProperties();
+
+    this.wowAPI = WoWAPI.getInstance();
   }
 
   /**
@@ -125,108 +124,55 @@ public class CmdLine
   {
     // Získání názvu příšery
     String nazevPrisery = textIO.newStringInputReader().withDefaultValue("dragon").read("Název příšery>");
-
-    // Vytvoření URL
-    String baseURL = BlizzardAPI.BASE_URL;
-    String path = "/data/wow/search/creature";
-    String suffix = "&name.en_GB=" + nazevPrisery + "&orderby=id&_page=1";
-
-
-    // Zavolání URL
-    String result = BlizzardAPI.GET(baseURL + path, suffix, Namespace.STATIC_EU);
-    if (result == null)
+    if (!wowAPI.creatureSEARCH(nazevPrisery))
     {
-      textIO.getTextTerminal().print("Příšera nebyla nalezena!\n");
+      textIO.getTextTerminal().print(wowAPI.getTextChyba());
       return;
     }
 
-    try
+    // Cyklus ve kterem vypiseme ziskane informace z JSOBObjektů za kazdou priseru v listPriser
+    for (PriseraZaznam priseraZaznam : wowAPI.getListPriser())
     {
-      textIO.getTextTerminal().print("Příšera nalezena - zpracování\n");
-
-      // Zpracování objekt
-      JSONObject object = new JSONObject(result);
-
-      // Získání objektu Results
-      JSONArray listResults = object.getJSONArray("results");
-
-      // Vytvoření prázdného listu příšer
-      ArrayList<PriseraZaznam> listPriser = new ArrayList<>();
-
-      // For loop objektem "results" (JSONArray)
-      for (int i = 1; i < listResults.length(); i++)
-      {
-        // Získání aktálního objektu z listu
-        JSONObject prisera = listResults.getJSONObject(i);
-        // Získání objektu data
-        JSONObject data = prisera.getJSONObject("data");
-
-        // Vytvoření našeho nového objektu PriseraZaznam
-        PriseraZaznam zaznam = new PriseraZaznam();
-        // Získání objektu name
-        JSONObject name = data.getJSONObject("name");
-        // Získání název z JSONObject name podle klíče engb a vkládáme do setName (set metoda pro promenou ve tride PriseraZaznam)
-        zaznam.setName(name.getString("en_GB"));
-        // Získání is_tameable z JSONObject data podle klíče is_tameable a vkládáme do setTameable (set metoda pro promenou ve tride PriseraZaznam)
-        zaznam.setTameable(data.getBoolean("is_tameable"));
-        // Získání Id z JSONObject data podle klíče id a vkládáme do setTameable (set metoda pro promenou ve tride PriseraZaznam)
-        zaznam.setId(data.getInt("id"));
-        // Získání objektu type
-        JSONObject type = data.getJSONObject("type");
-        // Získání obektu typename
-        JSONObject typename = type.getJSONObject("name");
-        // Získání Typename z JSONObject typeNme podle klíče EN_GB a vkládáme do setTypename (set metoda pro promenou ve tride PriseraZaznam)
-        zaznam.setTypeName(typename.getString("en_GB"));
-        // Získání TypeID z JSONObject type podle klíče id a vkládáme do setTypeID (set metoda pro promenou ve tride PriseraZaznam)
-        zaznam.setTypeID(type.getInt("id"));
-        // Zapsání získaných dat z JSONObjektů do instance listPriser
-        listPriser.add(zaznam);
-      }
-
-      // Cyklus ve kterem vypiseme ziskane informace z JSOBObjektů za kazdou priseru v listPriser
-      for (PriseraZaznam prisera : listPriser)
-      {
-        textIO.getTextTerminal().print(
-          "Jmeno: " + prisera.getName() + ", typ: " + prisera.getTypeName() + ", jeTameable:" + prisera.isTameable() + ", idPrisery: "
-          + prisera.getId() + "\n");
-      }
-    }
-    catch (JSONException ex)
-    {
-      ex.printStackTrace();
+      // Vypsání informací o příšeře
+      textIO.getTextTerminal().print(
+        "----------- ID: " + priseraZaznam.getId() + " | " + priseraZaznam.getName() + " -----------\n"
+        + "Typ: " + priseraZaznam.getTypeName() + "\n"
+        + "Je tameable: " + priseraZaznam.isTameable() + "\n");
     }
   }
 
   /**
    * Volání blizzard API
    */
-  private void zpracujINFO_CREATURE() {
+  private void zpracujINFO_CREATURE()
+  {
     // Získání názvu příšery
     String idPrisery = textIO.newStringInputReader().read("ID příšery>");
-
-    // BlizzardAPI.GET_RAW();
-    // /data/wow/creature/14756
-    String baseURL = BlizzardAPI.BASE_URL;
-    String path = "/data/wow/creature/" +idPrisery;
-
-    // 1) Vytvoř validní URL pro Creature API
-
-    // 2) Zavolej Blizzard API a získej result
-    // Zavolání URL
-
-    String result = BlizzardAPI.GET(baseURL + path, Namespace.STATIC_EU);
-    if (result == null) {
-      textIO.getTextTerminal().print("Příšera nebyla nalezena!\n");
+    PriseraZaznam priseraZaznam = wowAPI.creatureINFO(idPrisery);
+    if (priseraZaznam == null)
+    {
+      textIO.getTextTerminal().print(wowAPI.getTextChyba());
       return;
     }
 
-    // Zpracování objekt
-    JSONObject object = new JSONObject(result);
-    System.out.println(object);
-
+    // Vypsání informací o příšeře
+    textIO.getTextTerminal().print(
+      "----------- ID: " + priseraZaznam.getId() + " | " + priseraZaznam.getName() + " -----------\n"
+      + "Typ: " + priseraZaznam.getTypeName() + "\n"
+      + "Je tameable: " + priseraZaznam.isTameable() + "\n");
   }
 
+  public WoWAPI getWowAPI()
+  {
+    return wowAPI;
+  }
 
+  public static void main(String[] args)
+  {
+    // Spouští třídu CmdLine
+    CmdLine cmdLineProgram = new CmdLine();
+    cmdLineProgram.runProgram();
+  }
 }
 
 

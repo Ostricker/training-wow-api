@@ -50,7 +50,7 @@ public class BlizzardAPI
   {}
 
   /**
-   * Vrací jedinou instanci třídy XML_TPlanVecnaSkupina
+   * Vrací jedinou instanci třídy BlizzardAPI
    * @return
    */
   public static BlizzardAPI getInstance()
@@ -136,6 +136,11 @@ public class BlizzardAPI
     }
   }
 
+  public static String GET(String sURL)
+  {
+    return GET(sURL, null);
+  }
+
   public static String GET(String sURL, Namespace namespace)
   {
     return BlizzardAPI.GET(sURL, null, namespace);
@@ -183,8 +188,11 @@ public class BlizzardAPI
     // Vytvoření připojení
     final URL url = new URL(sURL);
     final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestProperty("Battlenet-Namespace", namespace.getText());
     connection.setRequestProperty("Authorization", "Bearer " + token.getString("access_token"));
+    if (namespace != null)
+    {
+      connection.setRequestProperty("Battlenet-Namespace", namespace.getText());
+    }
 
     // Připojení a získání response code - Pokud kod není OK, tak zkusím načíst co mám
     int responseCode = connection.getResponseCode();
@@ -196,32 +204,5 @@ public class BlizzardAPI
     
     // Vrácení odpovědi
     return IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
-  }
-
-  /**
-   * Test služby
-   * @param args
-   */
-  public static void main(String[] args)
-  {
-    final String locale = "en_US";
-    final String baseURL = "https://us.api.blizzard.com";
-    final String[] testPaths = {"/data/wow/item-class/index", "/data/wow/media/item/19019", "/data/wow/creature/30"};
-
-    try
-    {
-      for (final String path : testPaths)
-      {
-        final String uri = baseURL + path;
-        final String result = BlizzardAPI.GET(uri, Namespace.STATIC_EU);
-        final JSONObject object = new JSONObject(result);
-        System.out.println(uri + " ===> " + object.toString(2));
-      }
-
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
   }
 }
