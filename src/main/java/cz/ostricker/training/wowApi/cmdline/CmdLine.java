@@ -52,7 +52,7 @@ public class CmdLine
       String lineStart = ">";
 
       // Parse aktuálního příkazu -- Zde se čeká většinu času na příkaz
-      currentCommand = CmdCommands.parseCommand(textIO.newStringInputReader().withDefaultValue("creature").read(lineStart));
+      currentCommand = CmdCommands.parseCommand(textIO.newStringInputReader().withDefaultValue("infocr").read(lineStart));
 
       // Pokud je currentCommand null
       if (currentCommand == null)
@@ -131,6 +131,7 @@ public class CmdLine
     String path = "/data/wow/search/creature";
     String suffix = "&name.en_GB=" + nazevPrisery + "&orderby=id&_page=1";
 
+
     // Zavolání URL
     String result = BlizzardAPI.GET(baseURL + path, suffix, Namespace.STATIC_EU);
     if (result == null)
@@ -199,19 +200,33 @@ public class CmdLine
   /**
    * Volání blizzard API
    */
-  private void zpracujINFO_CREATURE()
-  {
+  private void zpracujINFO_CREATURE() {
     // Získání názvu příšery
-    String nazevPrisery = textIO.newStringInputReader().read("ID příšery>");
-    if (nazevPrisery == null || nazevPrisery.equals(""))
-    {
-      textIO.getTextTerminal().print("Je potřeba zadat validní ID příšery!\n");
+    String idPrisery = textIO.newStringInputReader().read("ID příšery>");
+
+    // BlizzardAPI.GET_RAW();
+    // /data/wow/creature/14756
+    String baseURL = BlizzardAPI.BASE_URL;
+    String path = "/data/wow/creature/" +idPrisery;
+
+    // 1) Vytvoř validní URL pro Creature API
+
+    // 2) Zavolej Blizzard API a získej result
+    // Zavolání URL
+
+    String result = BlizzardAPI.GET(baseURL + path, Namespace.STATIC_EU);
+    if (result == null) {
+      textIO.getTextTerminal().print("Příšera nebyla nalezena!\n");
       return;
     }
 
-    // 1) Vytvoř validní URL pro Creature API
-    // 2) Zavolej Blizzard API a získej result
-    // 3) result převeď do JSONObjekt
-    // 4) Vypiš informace o příšěře do terminálu
+    // Zpracování objekt
+    JSONObject object = new JSONObject(result);
+    System.out.println(object);
+
   }
+
+
 }
+
+
